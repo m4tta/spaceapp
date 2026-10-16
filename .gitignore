@@ -47,6 +47,7 @@ projects/
 *.log
 .DS_Store
 .cache/
+/.dev-stack/
 .autohand/
 .config/
 .local/

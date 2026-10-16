@@ -10,6 +10,7 @@ import "./public-export.test.mjs";
 import "./public-package-metadata.test.mjs";
 import "./public-release-readiness.test.mjs";
 import "./public-workflows.test.mjs";
+import "./dev-stack.test.mjs";
 import "./release-artifact-preflight.test.mjs";
 import "./release-version.test.mjs";
 import "./reset-owner-password.test.mjs";

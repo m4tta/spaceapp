@@ -23,6 +23,7 @@ const publicTestModules = [
   "public-package-metadata.test.mjs",
   "public-release-readiness.test.mjs",
   "public-workflows.test.mjs",
+  "dev-stack.test.mjs",
   "release-artifact-preflight.test.mjs",
   "release-version.test.mjs",
   "reset-owner-password.test.mjs",
