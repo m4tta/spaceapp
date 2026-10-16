@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { copyFile, cp, mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { copyFile, cp, mkdir, mkdtemp, readFile, realpath, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -18,7 +18,7 @@ async function freePort() {
   return String(port);
 }
 async function fixture(t) {
-  const directory = await mkdtemp(join(tmpdir(), "space-dev-contract-"));
+  const directory = await realpath(await mkdtemp(join(tmpdir(), "space-dev-contract-")));
   const cleanups = [];
   t.after(async () => {
     try { for (const cleanup of cleanups.reverse()) await cleanup(); }
@@ -75,6 +75,25 @@ test("every service refuses both reserved installed-app ports before creating st
       await assert.rejects(stat(state), { code: "ENOENT" });
     }
   }
+});
+
+test("an OS temporary directory reached through a symlink uses its canonical private parent", unixOnly, async t => {
+  const { directory, run, cleanups } = await fixture(t);
+  const temporary = join(directory, "temporary");
+  const linkedTemporary = join(directory, "temporary-link");
+  await mkdir(temporary);
+  await symlink(temporary, linkedTemporary, "dir");
+  const state = join(directory, "state");
+  const overrides = { TMPDIR: linkedTemporary };
+  const result = await run(state, undefined, overrides);
+  assert.match(result.stderr, /fixture-startup-stop/);
+  const metadata = JSON.parse(await readFile(join(state, "stack.json"), "utf8"));
+  assert.equal(metadata.runtimeRoot.startsWith(`${temporary}/`), true);
+  cleanups.push(async () => {
+    const stopped = await run(state, "reset", overrides);
+    assert.equal(stopped.code, 0, stopped.stderr);
+    await assert.rejects(stat(metadata.runtimeRoot), { code: "ENOENT" });
+  });
 });
 
 test("startup refuses to adopt an existing unmarked directory or an ancestor of its checkout", unixOnly, async t => {

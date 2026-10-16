@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn, execFile } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { access, readFile, readdir, stat, utimes, writeFile } from "node:fs/promises";
+import { access, readFile, readdir, realpath, stat, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,7 +11,7 @@ import WebSocket from "ws";
 
 const execute = promisify(execFile);
 const root = fileURLToPath(new URL("../", import.meta.url));
-const stateDir = resolve(process.env.SPACE_DEV_STACK_STATE_DIR ?? join(tmpdir(), `space-dev-smoke-${randomBytes(5).toString("hex")}`));
+const stateDir = resolve(process.env.SPACE_DEV_STACK_STATE_DIR ?? join(await realpath(tmpdir()), `space-dev-smoke-${randomBytes(5).toString("hex")}`));
 const apiOrigin = `http://127.0.0.1:${process.env.SPACE_DEV_STACK_API_PORT ?? "14910"}`;
 const webOrigin = `http://127.0.0.1:${process.env.SPACE_DEV_STACK_WEB_PORT ?? "14911"}`;
 const env = { ...process.env, SPACE_DEV_STACK_STATE_DIR: stateDir,

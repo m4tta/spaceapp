@@ -2,7 +2,7 @@
 
 import { spawn } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
-import { chmod, lstat, mkdir, readdir, readFile, rename, rm, unlink, writeFile } from "node:fs/promises";
+import { chmod, lstat, mkdir, readdir, readFile, realpath, rename, rm, unlink, writeFile } from "node:fs/promises";
 import { createConnection, createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
@@ -15,7 +15,9 @@ const sourceComposePath = join(repoRoot, "packages", "run-spaceapp", "templates"
 const stateRoot = resolve(repoRoot, process.env.SPACE_DEV_STACK_STATE_DIR || ".dev-stack");
 const stackHash = createHash("sha256").update(JSON.stringify({ repoRoot, stateRoot })).digest("hex").slice(0, 12);
 const projectName = `spaceapp-dev-${stackHash}`;
-const runtimeRoot = join(tmpdir(), projectName);
+// macOS normally reaches its temporary directory through /var -> /private/var.
+// Canonicalize the OS-selected parent before enforcing private-path ownership.
+const runtimeRoot = join(await realpath(tmpdir()), projectName);
 const controlSocket = join(runtimeRoot, "control.sock");
 const cliHostSocket = join(runtimeRoot, "cli-host.sock");
 const composePath = join(stateRoot, "compose.yml");
